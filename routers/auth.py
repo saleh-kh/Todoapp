@@ -56,10 +56,10 @@ async def get_current_user(token:Annotated[str, Depends(oauth2_bearer)]):
         user_id : int = payload.get('id')
         role : str =payload.get('role')
         if username is None or user_id is None:
-            raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED,detail="could not validate credintals لا هنا")
+            raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED,detail="could not validate credintals  ")
         return { 'username' : username , 'id' : user_id , 'role' : role}
     except JWTError:
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED,detail="could not validate credintals او هنا")    
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED,detail="could not validate credintals  ")    
 
 
 
