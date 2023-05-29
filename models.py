@@ -1,5 +1,5 @@
 from database import Base
-from sqlalchemy import Column,Integer , String , Boolean , ForeignKey
+from sqlalchemy import Column,Integer , String , Boolean , ForeignKey , ARRAY
 
 
 
@@ -14,6 +14,12 @@ class Users(Base):
 
 
 
+class Lists(Base):
+    __tablename__ = 'lists'
+    id = Column(Integer , primary_key=True)
+    listname = Column(String)
+    list_owner = Column(Integer,ForeignKey("users.id"))
+    shared_with = Column(ARRAY(String))
 
 class Todos(Base):
     __tablename__ = 'todos'
@@ -21,7 +27,7 @@ class Todos(Base):
     title = Column(String)
     priority = Column(Integer)
     complete = Column(Boolean , default=False)
-    owner_id = Column(Integer,ForeignKey("users.id"))
+    owner_list = Column(Integer,ForeignKey("lists.id"))
     # shared_with = Column(String , ForeignKey("users.username"))
 
 
