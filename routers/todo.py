@@ -62,7 +62,7 @@ async def read_todos(user:user_dependency,db: db_dependency, listname:str):
 # read a specific todo
 @router.get('/todo/{todo_id}')
 async def read_todo_by_id(db:db_dependency , user:user_dependency, listname:str , todo_id:int):
-    list_model = db.query(Lists).filter(Lists.list_owner == user.get('id'), Lists.listname == listname).first()
+    list_model = db.query(Lists).filter(Lists.list_owner == user.get('id') or text(":username = ANY(shared_with)").params(username=user.get('username')), Lists.listname == listname).first()
     if not list_model:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f'list {listname} not found')
     todo = db.query(Todos).filter(Todos.owner_list == list_model.id, Todos.id == todo_id  ).first()
@@ -74,7 +74,7 @@ async def read_todo_by_id(db:db_dependency , user:user_dependency, listname:str 
 @router.post('/todo')
 async def create_todo(db:db_dependency,user:user_dependency,todo_request:todo_request):
     list_name = todo_request.list_name
-    list_model = db.query(Lists).filter(Lists.list_owner == user.get('id') , Lists.listname == list_name ).first()
+    list_model = db.query(Lists).filter(Lists.list_owner == user.get('id') or text(":username = ANY(shared_with)").params(username=user.get('username')) , Lists.listname == list_name ).first()
     if not list_model:
         raise HTTPException(status_code=404, detail=f"List '{list_name}' not found for the user.")
     todo_model = Todos(
@@ -91,7 +91,7 @@ async def create_todo(db:db_dependency,user:user_dependency,todo_request:todo_re
 @router.put('/todo/{todo_id}')
 async def update_todo(db:db_dependency,user:user_dependency, updated_todo:todo_request , todo_id:int):
    list_name = updated_todo.list_name
-   list_model = db.query(Lists).filter(Lists.list_owner == user.get('id') , Lists.listname == list_name ).first()
+   list_model = db.query(Lists).filter(Lists.list_owner == user.get('id') or text(":username = ANY(shared_with)").params(username=user.get('username')) , Lists.listname == list_name ).first()
    if not list_model:
        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f'list {list_name} not found')
    todo_model = db.query(Todos).filter(Todos.id == todo_id , Todos.owner_list == list_model.id).first()
@@ -105,6 +105,7 @@ async def update_todo(db:db_dependency,user:user_dependency, updated_todo:todo_r
    db.add(todo_model)
    db.commit()
    
+
 
 
 
