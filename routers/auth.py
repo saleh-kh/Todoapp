@@ -1,16 +1,16 @@
-from datetime import timedelta , datetime
-from fastapi import APIRouter, Depends ,HTTPException ,status
-from database import Sessionlocal
+import os
+from datetime import datetime, timedelta
+
+from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
+from jose import JWTError, jwt
+from passlib.context import CryptContext
+from pydantic import BaseModel, Field
 from pydantic.typing import Annotated
 from sqlalchemy.orm import Session
-from pydantic import BaseModel ,Field
+
+from database import Sessionlocal
 from models import Users
-from passlib.context import CryptContext
-from jose import jwt , JWTError
-from fastapi.security import OAuth2PasswordRequestForm , OAuth2PasswordBearer
-import os
-
-
 
 
 def get_db():

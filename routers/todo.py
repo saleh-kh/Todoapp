@@ -1,15 +1,13 @@
-from pydantic import BaseModel , Field
+from fastapi import APIRouter, Depends, HTTPException, status
+from pydantic import BaseModel, Field
 from pydantic.typing import Annotated
-from fastapi import APIRouter,Depends ,HTTPException ,status
+from sqlalchemy import text
 from sqlalchemy.orm import Session
-from models import Todos , Lists
+
 from database import Sessionlocal
+from models import Lists, Todos
+
 from .auth import get_current_user
-from sqlalchemy import text 
-
-
-
-
 
 router = APIRouter()
 

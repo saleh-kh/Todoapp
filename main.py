@@ -1,9 +1,9 @@
 from fastapi import FastAPI
 from pydantic.typing import Annotated
-import models
-from database import engine 
-from routers import todo , auth , list
 
+import models
+from database import engine
+from routers import auth, list, todo
 
 app = FastAPI()
 models.Base.metadata.create_all(bind = engine)
