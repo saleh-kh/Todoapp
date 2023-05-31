@@ -32,6 +32,14 @@ class list_request(BaseModel):
 
 
 
+# get all lists 
+@router.get('/read')
+async def get_lists(db:db_dependency , user:user_dependency):
+    lists = db.query(Lists).filter(Lists.list_owner == user.get('id')).all()
+    if not lists:
+        raise HTTPException(status_code=404, detail="there's no list")
+    return lists
+
 #create a new list
 @router.post('/create',status_code=status.HTTP_201_CREATED)
 async def create_list(db:db_dependency, user : user_dependency,new_list:list_request ):
