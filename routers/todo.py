@@ -5,6 +5,7 @@ from sqlalchemy.orm import Session
 from models import Todos , Lists
 from database import Sessionlocal
 from .auth import get_current_user
+from sqlalchemy import text 
 
 
 
@@ -116,6 +117,16 @@ async def delete_todo(db:db_dependency ,user:user_dependency, todo_id:int):
         raise  HTTPException(status_code=404, detail="todo not found")
     db.delete(todo)
     db.commit()
+
+
+#get todos shared with me
+@router.get('/shared_todo')
+async def get_shared_todos(db:db_dependency, user:user_dependency,listname:str):
+    list = db.query(Lists).filter(text(":username = ANY(shared_with)").params(username=user.get('username')),Lists.listname == listname).first()
+    if not list:
+        raise HTTPException(status_code=404,detail=f'list {listname} not found')
+    todos = db.query(Todos).filter(Todos.owner_list == list.id).all()
+    return todos
 
 
 

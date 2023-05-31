@@ -8,6 +8,7 @@ from models import Users
 from passlib.context import CryptContext
 from jose import jwt , JWTError
 from fastapi.security import OAuth2PasswordRequestForm , OAuth2PasswordBearer
+import os
 
 
 
@@ -26,7 +27,7 @@ router = APIRouter(prefix='/auth',tags=['auth'])
 oauth2_bearer = OAuth2PasswordBearer(tokenUrl='auth/token')
 
 #for JWT
-SECRET_KEY = '948d7866cc6e14b8a100c849a69d35ab656a14dcfa3fbaf0969903df36cbe07b'
+SECRET_KEY = os.environ.get('token')
 ALGORITHM = 'HS256'
 
 # auth user
@@ -49,17 +50,19 @@ def create_access_token(username:str , user_id:int , role:str , expire_time:time
 
 #
 
-async def get_current_user(token:Annotated[str, Depends(oauth2_bearer)]):
+async def get_current_user(token: Annotated[str, Depends(oauth2_bearer)]):
     try:
         payload = jwt.decode(token , SECRET_KEY , algorithms=[ALGORITHM])
-        username :str = payload.get('sub')
-        user_id : int = payload.get('id')
-        role : str =payload.get('role')
+        username, user_id , role = payload.get('sub'), payload.get('id'), payload.get('role')
         if username is None or user_id is None:
-            raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED,detail="could not validate credintals لا هنا")
-        return { 'username' : username , 'id' : user_id , 'role' : role}
+            raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED,detail="could not validate credintals  ")
+        
+        return { 'username':
+                 username , 
+                 'id': user_id , 
+                 'role': role}
     except JWTError:
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED,detail="could not validate credintals او هنا")    
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED,detail="could not validate credintals  ")    
 
 
 
@@ -93,11 +96,11 @@ async def get_users(db:db_dependency):
 
 
 @router.post('/token')
-async def login_for_token(formdata : Annotated[OAuth2PasswordRequestForm,Depends()], db:db_dependency):
+async def login_for_token(formdata : Annotated[OAuth2PasswordRequestForm, Depends()], db:db_dependency):
     user =  auth_user(formdata.username, formdata.password,db)
     if not user:
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED,detail="could not validate credintals هنا")
-    token = create_access_token(user.username , user.id , user.role, timedelta(minutes=20))
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED,detail="could not validate credintals ")
+    token = create_access_token(user.username , user.id , user.role, timedelta(hours=48))
 
     return {'access_token' : token ,'token_type' : 'bearer' }
 
