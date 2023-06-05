@@ -33,7 +33,7 @@ class list_request(BaseModel):
 
 
 # get all lists 
-@router.get('/read')
+@router.get('/read',status_code=status.HTTP_200_OK)
 async def get_lists(db:db_dependency , user:user_dependency):
     lists = db.query(Lists).filter(Lists.list_owner == user.get('id')).all()
     if not lists:
@@ -51,7 +51,7 @@ async def create_list(db:db_dependency, user : user_dependency,new_list:list_req
 
 
 #delete a list
-@router.delete('/delete')
+@router.delete('/delete',status_code=status.HTTP_204_NO_CONTENT)
 async def delete_list(db:db_dependency , user:user_dependency , list_name:str):
     list = db.query(Lists).filter(Lists.list_owner == user.get('id'),Lists.listname == list_name).first()
     if not list:
@@ -61,7 +61,7 @@ async def delete_list(db:db_dependency , user:user_dependency , list_name:str):
     db.commit()
 
 #update the list
-@router.put('/update')
+@router.put('/update',status_code=status.HTTP_204_NO_CONTENT)
 async def update_list(db:db_dependency, user: user_dependency , list_name:str ,updated_list:list_request):
     list = db.query(Lists).filter(Lists.list_owner == user.get('id'),Lists.listname == list_name).first()
     if not list:

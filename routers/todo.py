@@ -49,7 +49,7 @@ class todo_request(BaseModel):
 # basic CRUD operations
 
 # read all todos
-@router.get('/todo')
+@router.get('/todo',status_code=status.HTTP_200_OK)
 async def read_todos(user:user_dependency,db: db_dependency, listname:str):
     list_model = db.query(Lists).filter(Lists.list_owner == user.get('id'), Lists.listname == listname).first()
     if not list_model:
@@ -58,23 +58,25 @@ async def read_todos(user:user_dependency,db: db_dependency, listname:str):
     return todos
 
 # read a specific todo
-@router.get('/todo/{todo_id}')
+@router.get('/todo/{todo_id}',status_code=status.HTTP_200_OK)
 async def read_todo_by_id(db:db_dependency , user:user_dependency, listname:str , todo_id:int):
-    list_model = db.query(Lists).filter(Lists.list_owner == user.get('id') or text(":username = ANY(shared_with)").params(username=user.get('username')), Lists.listname == listname).first()
+    list_model = db.query(Lists).filter(Lists.list_owner == user.get('id')  , Lists.listname == listname ).first() or \
+        db.query(Lists).filter(text(":username = ANY(shared_with)").params(username=user.get('username')) , Lists.listname == listname ).first()
     if not list_model:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f'list {listname} not found')
+        raise HTTPException(status_code=404, detail=f"List '{listname}' not found or not shared with the user.")
     todo = db.query(Todos).filter(Todos.owner_list == list_model.id, Todos.id == todo_id  ).first()
     if not todo:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail='todo not found')
     return todo
 
 # create a todo
-@router.post('/todo')
+@router.post('/todo', status_code=status.HTTP_201_CREATED)
 async def create_todo(db:db_dependency,user:user_dependency,todo_request:todo_request):
     list_name = todo_request.list_name
-    list_model = db.query(Lists).filter(Lists.list_owner == user.get('id') or text(":username = ANY(shared_with)").params(username=user.get('username')) , Lists.listname == list_name ).first()
+    list_model = db.query(Lists).filter(Lists.list_owner == user.get('id')  , Lists.listname == list_name ).first() or \
+        db.query(Lists).filter(text(":username = ANY(shared_with)").params(username=user.get('username')) , Lists.listname == list_name ).first()
     if not list_model:
-        raise HTTPException(status_code=404, detail=f"List '{list_name}' not found for the user.")
+        raise HTTPException(status_code=404, detail=f"List '{list_name}' not found or not shared with the user.")
     todo_model = Todos(
         title = todo_request.title , 
         priority = todo_request.priority ,
@@ -86,12 +88,14 @@ async def create_todo(db:db_dependency,user:user_dependency,todo_request:todo_re
 
 
 # update a todo 
-@router.put('/todo/{todo_id}')
+@router.put('/todo/{todo_id}',status_code=status.HTTP_204_NO_CONTENT)
 async def update_todo(db:db_dependency,user:user_dependency, updated_todo:todo_request , todo_id:int):
    list_name = updated_todo.list_name
-   list_model = db.query(Lists).filter(Lists.list_owner == user.get('id') or text(":username = ANY(shared_with)").params(username=user.get('username')) , Lists.listname == list_name ).first()
+   # Check if list exist or shared by the user 
+   list_model = db.query(Lists).filter(Lists.list_owner == user.get('id')  , Lists.listname == list_name ).first() or \
+        db.query(Lists).filter(text(":username = ANY(shared_with)").params(username=user.get('username')) , Lists.listname == list_name ).first()
    if not list_model:
-       raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f'list {list_name} not found')
+        raise HTTPException(status_code=404, detail=f"List '{list_name}' not found or not shared with the user.")
    todo_model = db.query(Todos).filter(Todos.id == todo_id , Todos.owner_list == list_model.id).first()
    if not todo_model:
        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,detail='todo not found')
@@ -108,9 +112,9 @@ async def update_todo(db:db_dependency,user:user_dependency, updated_todo:todo_r
 
 
 # delete a todo
-@router.delete('/todo/{todo_id}')
+@router.delete('/todo/{todo_id}',status_code=status.HTTP_204_NO_CONTENT)
 async def delete_todo(db:db_dependency ,user:user_dependency, todo_id:int):
-    list = db.query(Lists).filter(Lists.list_owner == user.get('id')).first()
+    list = db.query(Lists).filter(Lists.list_owner == user.get('id') ).first()
     todo = db.query(Todos).filter(Todos.owner_list == list.id , Todos.id == todo_id ).first()
     if not todo:
         raise  HTTPException(status_code=404, detail="todo not found")
@@ -119,7 +123,7 @@ async def delete_todo(db:db_dependency ,user:user_dependency, todo_id:int):
 
 
 #get todos shared with me
-@router.get('/shared_todo')
+@router.get('/shared_todo',status_code=status.HTTP_200_OK)
 async def get_shared_todos(db:db_dependency, user:user_dependency,listname:str):
     list = db.query(Lists).filter(text(":username = ANY(shared_with)").params(username=user.get('username')),Lists.listname == listname).first()
     if not list:
